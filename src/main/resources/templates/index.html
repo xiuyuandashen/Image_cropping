@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="dist/cropper.min.css" />
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style>
+
+        .img-con {
+            width: 800px;
+            height: 400px;
+            border: 1px solid #ccc;
+            float: left;
+        }
+
+        .img-pre {
+            width: 400px;
+            height: 400px;
+            float: right;
+            border: 1px solid #eee;
+        }
+
+        .img-pre img {
+            width: 180px;
+            height: 180px;
+            padding: 10px;
+        }
+
+        .img-con img {
+            width: 100%;
+            height: 100%;
+        }
+        #zhezhao{
+            border: 1px solid #999999;
+            margin: 0 auto;
+            padding: 3vw;
+            width: 50%;
+            position: fixed;
+            top: 25%;
+            left: 25%;
+
+        }
+        </style>
+
+
+</head>
+
+<body>
+<div class="row">
+    <div class="col-sm-12 text-center">
+        <label for="input" class="btn btn-danger" id="click">
+            <span >选择图片</span>
+            <input type="file" id="input" class="sr-only">
+        </label>
+    </div>
+</div>
+<div class="row" id="zhezhao" style="display: none;">
+    <div class="col-sm-6 " style="width: 80%;">
+        <img src="" id="photo" style="width: 80%;height: auto;">
+    </div>
+    <div class="col-sm-offset-2 col-sm-4" style="width: 20%;">
+        <div>
+            <p>
+                预览(100*100)：
+            </p>
+            <div class="img-preview">
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="crop()">裁剪图片</button>
+        <div>
+            <br/>
+            <p>
+                结果：
+            </p>
+            <img src="" alt="裁剪结果" id="result">
+        </div>
+    </div>
+</div>
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous">
+
+</script>
+<script src="/dist/cropper.min.js"></script>
+<script>
+    // 修改自官方demo的js
+    var initCropper = function (img, input){
+        var $image = img;
+        var options = {
+            aspectRatio: 1, // 纵横比
+            viewMode: 2,
+            preview: '.img-preview' // 预览图的class名
+        };
+        $image.cropper(options);
+        var $inputImage = input;
+        var uploadedImageURL;
+        if (URL) {
+            // 给input添加监听
+            $inputImage.change(function () {
+                var files = this.files;
+                var file;
+                if (!$image.data('cropper')) {
+                    return;
+                }
+                if (files && files.length) {
+                    file = files[0];
+                    // 判断是否是图像文件
+                    if (/^image\/\w+$/.test(file.type)) {
+                        // 如果URL已存在就先释放
+                        if (uploadedImageURL) {
+                            URL.revokeObjectURL(uploadedImageURL);
+                        }
+                        uploadedImageURL = URL.createObjectURL(file);
+                        // 销毁cropper后更改src属性再重新创建cropper
+                        $image.cropper('destroy').attr('src', uploadedImageURL).cropper(options);
+                        $inputImage.val('');
+                    } else {
+                        window.alert('请选择一个图像文件！');
+                    }
+                }
+            });
+        } else {
+            $inputImage.prop('disabled', true).addClass('disabled');
+        }
+    }
+    var crop = function () {
+        var photo = $('#photo').cropper('getCroppedCanvas', {
+            // 裁剪后的长宽
+            height: 160
+        }).toDataURL('image/png');
+        console.log(photo);
+        $.ajax({
+            url: '/upload', // 要上传的地址
+            method: 'post',
+            data: { dataURL:photo },
+            success: function (data) {
+                $('#result').attr('src', data.src).show();
+                $('#img').val(data);
+            },
+            error: function (data) {
+                alert(data);
+            }
+        });
+    }
+
+    $(function(){
+        initCropper($('#photo'),$('#input'));
+    });
+    let btn =  document.querySelector("#click");
+    btn.addEventListener("click",()=>{
+        document.querySelector("#zhezhao").style.display = "flex";
+
+    })
+</script>
+</body>
+
+</html>
+
